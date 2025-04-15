@@ -11,7 +11,7 @@ Logger logger = Logger(
     lineLength: 90,
     colors: true,
     printEmojis: true,
-    printTime: false,
+    dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
   ),
   level: loggerLevel,
 );

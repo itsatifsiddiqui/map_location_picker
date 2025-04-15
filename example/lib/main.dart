@@ -39,7 +39,7 @@ class _MyAppState extends State<MyApp> {
         children: [
           PlacesAutocomplete(
             searchController: _controller,
-            apiKey: YOUR_API_KEY,
+            apiKey: yourApiKey,
             mounted: mounted,
             hideBackButton: true,
             onGetDetailsByPlaceId: (PlacesDetailsResponse? result) {
@@ -64,7 +64,7 @@ class _MyAppState extends State<MyApp> {
                       mounted: mounted,
                       hideBackButton: true,
                       initialValue: initialValue,
-                      onSuggestionSelected: (value) {
+                      onSelected: (value) {
                         setState(() {
                           autocompletePlace =
                               value.structuredFormatting?.mainText ?? "";
@@ -94,7 +94,7 @@ class _MyAppState extends State<MyApp> {
             child: Text(
               "Google Map Location Picker\nMade By Arvind 😃 with Flutter 🚀",
               textAlign: TextAlign.center,
-              textScaleFactor: 1.2,
+              textScaler: TextScaler.linear(1.2),
               style: TextStyle(
                 color: Colors.grey,
               ),
@@ -104,6 +104,7 @@ class _MyAppState extends State<MyApp> {
             onPressed: () => Clipboard.setData(
               const ClipboardData(text: "https://www.mohesu.com"),
             ).then(
+              // ignore: use_build_context_synchronously
               (value) => ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text("Copied to Clipboard"),
@@ -122,7 +123,7 @@ class _MyAppState extends State<MyApp> {
                   MaterialPageRoute(
                     builder: (context) {
                       return MapLocationPicker(
-                        apiKey: YOUR_API_KEY,
+                        apiKey: yourApiKey,
                         popOnNextButtonTaped: true,
                         currentLatLng: const LatLng(29.146727, 76.464895),
                         onNext: (GeocodingResult? result) {

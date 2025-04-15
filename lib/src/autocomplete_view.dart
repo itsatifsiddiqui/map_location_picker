@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart' hide ErrorBuilder;
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:form_builder_extra_fields/form_builder_extra_fields.dart';
 import 'package:http/http.dart';
 
@@ -88,7 +88,7 @@ class PlacesAutocomplete extends StatelessWidget {
   final void Function(PlacesDetailsResponse?)? onGetDetailsByPlaceId;
 
   /// On suggestion selected callback
-  final void Function(Prediction)? onSuggestionSelected;
+  final void Function(Prediction)? onSelected;
 
   /// Search text field controller
   ///
@@ -133,11 +133,11 @@ class PlacesAutocomplete extends StatelessWidget {
   /// The decoration of the material sheet that contains the suggestions.
   ///
   /// If null, default decoration with an elevation of 4.0 is used
-  final SuggestionsBoxDecoration suggestionsBoxDecoration;
+  final Widget Function(BuildContext, Widget)? decorationBuilder;
 
   /// Used to control the `_SuggestionsBox`. Allows manual control to
   /// open, close, toggle, or resize the `_SuggestionsBox`.
-  final SuggestionsBoxController? suggestionsBoxController;
+  final SuggestionsController<Prediction>? suggestionsController;
 
   /// The duration to wait after the user stops typing before calling
   /// [suggestionsCallback]
@@ -173,7 +173,7 @@ class PlacesAutocomplete extends StatelessWidget {
   /// ```
   ///
   /// If not specified, a simple text is shown
-  final WidgetBuilder? noItemsFoundBuilder;
+  final WidgetBuilder? emptyBuilder;
 
   /// Called when [suggestionsCallback] throws an exception.
   ///
@@ -213,7 +213,7 @@ class PlacesAutocomplete extends StatelessWidget {
   /// To fully remove the animation, just return `suggestionsBox`
   ///
   /// If not specified, a [SizeTransition](https://docs.flutter.io/flutter/widgets/SizeTransition-class.html) is shown.
-  final AnimationTransitionBuilder? transitionBuilder;
+  // final AnimationTransitionBuilder? transitionBuilder;
 
   /// The duration that [transitionBuilder] animation takes.
   ///
@@ -232,31 +232,19 @@ class PlacesAutocomplete extends StatelessWidget {
   /// and the [_SuggestionsList] will grow **up**.
   ///
   /// [AxisDirection.left] and [AxisDirection.right] are not allowed.
-  final AxisDirection direction;
-
-  /// The value at which the [transitionBuilder] animation starts.
-  ///
-  /// This argument is best used with [transitionBuilder] and [animationDuration]
-  /// to fully control the animation.
-  ///
-  /// Defaults to 0.25.
-  final double animationStart;
+  final VerticalDirection direction;
 
   /// The configuration of the [TextField](https://docs.flutter.io/flutter/material/TextField-class.html)
   /// that the TypeAhead widget displays
-  final TextFieldConfiguration textFieldConfiguration;
-
-  /// How far below the text field should the suggestions box be
-  ///
-  /// Defaults to 5.0
-  final double suggestionsBoxVerticalOffset;
+  final Widget Function(BuildContext, TextEditingController, FocusNode)?
+      builder;
 
   /// If set to true, suggestions will be fetched immediately when the field is
   /// added to the view.
   ///
   /// But the suggestions box will only be shown when the field receives focus.
   /// To make the field receive focus immediately, you can set the `autofocus`
-  /// property in the [textFieldConfiguration] to true
+  /// property in your custom [builder] to true
   ///
   /// Defaults to false
   final bool getImmediateSuggestions;
@@ -268,7 +256,7 @@ class PlacesAutocomplete extends StatelessWidget {
   final bool hideOnLoading;
 
   /// If set to true, nothing will be shown if there are no results.
-  /// [noItemsFoundBuilder] will also be ignored.
+  /// [emptyBuilder] will also be ignored.
   ///
   /// Defaults to false.
   final bool hideOnEmpty;
@@ -283,13 +271,13 @@ class PlacesAutocomplete extends StatelessWidget {
   /// the keyboard is closed.
   ///
   /// Defaults to true.
-  final bool hideSuggestionsOnKeyboardHide;
+  final bool hideWithKeyboard;
 
   /// If set to false, the suggestions box will show a circular
   /// progress indicator when retrieving suggestions.
   ///
   /// Defaults to true.
-  final bool keepSuggestionsOnLoading;
+  final bool retainOnLoading;
 
   /// If set to true, the suggestions box will remain opened even after
   /// selecting a suggestion.
@@ -302,7 +290,7 @@ class PlacesAutocomplete extends StatelessWidget {
   /// box without a manual way via `SuggestionsBoxController`.
   ///
   /// Defaults to false.
-  final bool keepSuggestionsOnSuggestionSelected;
+  final bool hideOnSelect;
 
   /// If set to true, in the case where the suggestions box has less than
   /// _SuggestionsBoxController.minOverlaySpace to grow in the desired [direction], the direction axis
@@ -359,8 +347,12 @@ class PlacesAutocomplete extends StatelessWidget {
   /// Defaults to 0
   final int minCharsForSuggestions;
 
+  /// If set to true, suggestions will be shown when the field gets focus
+  /// Defaults to true
+  final bool showOnFocus;
+
   const PlacesAutocomplete({
-    Key? key,
+    super.key,
     required this.apiKey,
     this.language,
     this.topCardMargin = const EdgeInsets.all(8),
@@ -376,7 +368,7 @@ class PlacesAutocomplete extends StatelessWidget {
     this.placesApiHeaders,
     this.placesBaseUrl,
     this.sessionToken,
-    this.offset,
+    this.offset = 5.0,
     this.origin,
     this.location,
     this.radius,
@@ -385,38 +377,36 @@ class PlacesAutocomplete extends StatelessWidget {
     this.types = const [],
     this.components = const [],
     this.strictbounds = false,
-    this.hideSuggestionsOnKeyboardHide = false,
+    this.hideWithKeyboard = false,
     this.searchController,
     required this.mounted,
     this.onGetDetailsByPlaceId,
-    this.onSuggestionSelected,
+    this.onSelected,
     this.showClearButton = true,
     this.suffixIcon,
     this.initialValue,
     this.validator,
     this.itemBuilder,
     this.animationDuration = const Duration(milliseconds: 500),
-    this.animationStart = 0.25,
     this.autoFlipDirection = false,
     this.controller,
     this.debounceDuration = const Duration(milliseconds: 300),
-    this.direction = AxisDirection.down,
+    this.direction = VerticalDirection.down,
     this.errorBuilder,
     this.getImmediateSuggestions = false,
     this.hideKeyboard = false,
     this.hideOnEmpty = false,
     this.hideOnError = false,
     this.hideOnLoading = false,
-    this.keepSuggestionsOnLoading = true,
-    this.keepSuggestionsOnSuggestionSelected = false,
+    this.retainOnLoading = true,
+    this.hideOnSelect = false,
     this.loadingBuilder,
-    this.noItemsFoundBuilder,
+    this.emptyBuilder,
     this.scrollController,
-    this.suggestionsBoxController,
-    this.suggestionsBoxDecoration = const SuggestionsBoxDecoration(),
-    this.suggestionsBoxVerticalOffset = 5.0,
-    this.textFieldConfiguration = const TextFieldConfiguration(),
-    this.transitionBuilder,
+    this.suggestionsController,
+    this.decorationBuilder,
+    this.builder,
+    // this.transitionBuilder,
     this.decoration,
     this.valueTransformer,
     this.enabled = true,
@@ -432,7 +422,8 @@ class PlacesAutocomplete extends StatelessWidget {
     this.right = true,
     this.top = true,
     this.minCharsForSuggestions = 0,
-  }) : super(key: key);
+    this.showOnFocus = true,
+  });
 
   /// Get [AutoCompleteState] for [AutoCompleteTextField]
   AutoCompleteState autoCompleteState() {
@@ -466,7 +457,7 @@ class PlacesAutocomplete extends StatelessWidget {
           title: ClipRRect(
             borderRadius: borderRadius,
             child: FormBuilderTypeAhead<Prediction>(
-              minCharsForSuggestions: minCharsForSuggestions,
+              // minCharsForSuggestions: minCharsForSuggestions,
               decoration: decoration ??
                   InputDecoration(
                     hintText: searchHintText,
@@ -507,38 +498,36 @@ class PlacesAutocomplete extends StatelessWidget {
                 );
                 return predictions;
               },
-              onSuggestionSelected: (value) async {
+              onSelected: (value) async {
                 textController.value.selection = TextSelection.collapsed(
                     offset: textController.value.text.length);
                 _getDetailsByPlaceId(value.placeId ?? "", context);
-                onSuggestionSelected?.call(value);
+                onSelected?.call(value);
               },
-              hideSuggestionsOnKeyboardHide: hideSuggestionsOnKeyboardHide,
+              hideWithKeyboard: hideWithKeyboard,
               initialValue: initialValue,
               validator: validator,
-              suggestionsBoxDecoration: suggestionsBoxDecoration,
+              decorationBuilder: decorationBuilder,
               scrollController: scrollController,
               animationDuration: animationDuration,
-              animationStart: animationStart,
               autoFlipDirection: autoFlipDirection,
               debounceDuration: debounceDuration,
               direction: direction,
-              errorBuilder: errorBuilder,
+              suggestionErrorBuilder: errorBuilder,
               focusNode: focusNode,
-              getImmediateSuggestions: getImmediateSuggestions,
-              hideKeyboard: hideKeyboard,
+              // getImmediateSuggestions: getImmediateSuggestions,
+              // hideKeyboard: hideKeyboard,
               hideOnEmpty: hideOnEmpty,
               hideOnError: hideOnError,
               hideOnLoading: hideOnLoading,
-              keepSuggestionsOnLoading: keepSuggestionsOnLoading,
-              keepSuggestionsOnSuggestionSelected:
-                  keepSuggestionsOnSuggestionSelected,
+              retainOnLoading: retainOnLoading,
+              hideOnSelect: !hideOnSelect,
               loadingBuilder: loadingBuilder,
-              noItemsFoundBuilder: noItemsFoundBuilder,
-              suggestionsBoxController: suggestionsBoxController,
-              suggestionsBoxVerticalOffset: suggestionsBoxVerticalOffset,
-              textFieldConfiguration: textFieldConfiguration,
-              transitionBuilder: transitionBuilder,
+              emptyBuilder: emptyBuilder,
+              suggestionsController: suggestionsController,
+              offset: Offset(0, 5),
+              // builder: builder,
+              // transitionBuilder: transitionBuilder,
               valueTransformer: valueTransformer,
               enabled: enabled,
               autovalidateMode: autovalidateMode,

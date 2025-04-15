@@ -187,7 +187,7 @@ class MapLocationPicker extends StatefulWidget {
 
   /// Focus node for the search text field
   final FocusNode? focusNode;
-  
+
   /// Tooltip for the FAB button.
   final String fabTooltip;
 
@@ -198,76 +198,75 @@ class MapLocationPicker extends StatefulWidget {
   /// Defaults to 0
   final int minCharsForSuggestions;
 
-  const MapLocationPicker({
-    Key? key,
-    this.desiredAccuracy = LocationAccuracy.high,
-    required this.apiKey,
-    this.geoCodingBaseUrl,
-    this.geoCodingHttpClient,
-    this.geoCodingApiHeaders,
-    this.language,
-    this.locationType = const [],
-    this.resultType = const [],
-    this.minMaxZoomPreference = const MinMaxZoomPreference(0, 16),
-    this.padding = const EdgeInsets.all(0),
-    this.compassEnabled = true,
-    this.liteModeEnabled = false,
-    this.topCardMargin = const EdgeInsets.all(8),
-    this.topCardColor,
-    this.topCardShape = const RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(12)),
-    ),
-    this.borderRadius = const BorderRadius.all(Radius.circular(12)),
-    this.searchHintText = "Start typing to search",
-    this.bottomCardShape = const RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(12)),
-    ),
-    this.bottomCardMargin = const EdgeInsets.fromLTRB(8, 8, 8, 16),
-    this.bottomCardIcon = const Icon(Icons.send),
-    this.bottomCardTooltip = "Continue with this location",
-    this.bottomCardColor,
-    this.hasLocationPermission = true,
-    this.getLocation,
-    this.onSuggestionSelected,
-    this.onNext,
-    this.currentLatLng = const LatLng(28.8993468, 76.6250249),
-    this.hideBackButton = false,
-    this.popOnNextButtonTaped = false,
-    this.backButton,
-    this.hideMoreOptions = false,
-    this.dialogTitle = 'You can also use the following options',
-    this.placesHttpClient,
-    this.placesApiHeaders,
-    this.placesBaseUrl,
-    this.sessionToken,
-    this.offset,
-    this.origin,
-    this.location,
-    this.radius,
-    this.region,
-    this.fields = const [],
-    this.types = const [],
-    this.components = const [],
-    this.strictbounds = false,
-    this.hideSuggestionsOnKeyboardHide = false,
-    this.mapType = MapType.normal,
-    this.searchController,
-    this.additionalMarkers,
-    this.bottom = true,
-    this.left = true,
-    this.maintainBottomViewPadding = false,
-    this.minimum = EdgeInsets.zero,
-    this.right = true,
-    this.top = true,
-    this.hideLocationButton = false,
-    this.hideMapTypeButton = false,
-    this.hideBottomCard = false,
-    this.onDecodeAddress,
-    this.focusNode,
-    this.fabTooltip = 'My Location',
-    this.fabIcon =  Icons.my_location,
-    this.minCharsForSuggestions = 0
-  }) : super(key: key);
+  const MapLocationPicker(
+      {super.key,
+      this.desiredAccuracy = LocationAccuracy.high,
+      required this.apiKey,
+      this.geoCodingBaseUrl,
+      this.geoCodingHttpClient,
+      this.geoCodingApiHeaders,
+      this.language,
+      this.locationType = const [],
+      this.resultType = const [],
+      this.minMaxZoomPreference = const MinMaxZoomPreference(0, 16),
+      this.padding = const EdgeInsets.all(0),
+      this.compassEnabled = true,
+      this.liteModeEnabled = false,
+      this.topCardMargin = const EdgeInsets.all(8),
+      this.topCardColor,
+      this.topCardShape = const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      this.borderRadius = const BorderRadius.all(Radius.circular(12)),
+      this.searchHintText = "Start typing to search",
+      this.bottomCardShape = const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      this.bottomCardMargin = const EdgeInsets.fromLTRB(8, 8, 8, 16),
+      this.bottomCardIcon = const Icon(Icons.send),
+      this.bottomCardTooltip = "Continue with this location",
+      this.bottomCardColor,
+      this.hasLocationPermission = true,
+      this.getLocation,
+      this.onSuggestionSelected,
+      this.onNext,
+      this.currentLatLng = const LatLng(28.8993468, 76.6250249),
+      this.hideBackButton = false,
+      this.popOnNextButtonTaped = false,
+      this.backButton,
+      this.hideMoreOptions = false,
+      this.dialogTitle = 'You can also use the following options',
+      this.placesHttpClient,
+      this.placesApiHeaders,
+      this.placesBaseUrl,
+      this.sessionToken,
+      this.offset,
+      this.origin,
+      this.location,
+      this.radius,
+      this.region,
+      this.fields = const [],
+      this.types = const [],
+      this.components = const [],
+      this.strictbounds = false,
+      this.hideSuggestionsOnKeyboardHide = false,
+      this.mapType = MapType.normal,
+      this.searchController,
+      this.additionalMarkers,
+      this.bottom = true,
+      this.left = true,
+      this.maintainBottomViewPadding = false,
+      this.minimum = EdgeInsets.zero,
+      this.right = true,
+      this.top = true,
+      this.hideLocationButton = false,
+      this.hideMapTypeButton = false,
+      this.hideBottomCard = false,
+      this.onDecodeAddress,
+      this.focusNode,
+      this.fabTooltip = 'My Location',
+      this.fabIcon = Icons.my_location,
+      this.minCharsForSuggestions = 0});
 
   @override
   State<MapLocationPicker> createState() => _MapLocationPickerState();
@@ -317,14 +316,8 @@ class _MapLocationPickerState extends State<MapLocationPicker> {
         position: _initialPosition,
       ),
     );
-    return WillPopScope(
-      onWillPop: () async {
-        if (Navigator.of(context).userGestureInProgress) {
-          return false;
-        } else {
-          return true;
-        }
-      },
+    return PopScope(
+      canPop: !Navigator.of(context).userGestureInProgress,
       child: Scaffold(
         body: Stack(
           children: [
@@ -390,8 +383,8 @@ class _MapLocationPickerState extends State<MapLocationPicker> {
                   backButton: widget.backButton,
                   components: widget.components,
                   fields: widget.fields,
-                  hideSuggestionsOnKeyboardHide:
-                      widget.hideSuggestionsOnKeyboardHide,
+                  // hideSuggestionsOnKeyboardHide:
+                  //     widget.hideSuggestionsOnKeyboardHide,
                   language: widget.language,
                   location: widget.location,
                   origin: widget.origin,
@@ -503,7 +496,9 @@ class _MapLocationPickerState extends State<MapLocationPicker> {
                           await Geolocator.requestPermission();
                           Position position =
                               await Geolocator.getCurrentPosition(
-                            desiredAccuracy: widget.desiredAccuracy,
+                            locationSettings: LocationSettings(
+                              accuracy: widget.desiredAccuracy,
+                            ),
                           );
                           LatLng latLng =
                               LatLng(position.latitude, position.longitude);
